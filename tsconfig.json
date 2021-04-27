@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "es2015",
+    "allowJs": true,
+    "strict": true,
+    "outDir": "./lib",
+    "esModuleInterop": true,
+    "noImplicitAny": false, 
+    "typeRoots": ["./node_modules/@types"]
+  }
+}

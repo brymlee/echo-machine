@@ -1,0 +1,16 @@
+{
+  "name": "echo-machine",
+  "version": "1.0.0",
+  "description": "echo-machine",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.2.4",
+    "xstate": "4.18.0"
+  }
+}
