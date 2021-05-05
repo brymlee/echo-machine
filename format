@@ -1,0 +1,5 @@
+#!/bin/sh
+FILES=$(find src -name "*.ts")
+[ -z "$FILES" ] && exit 0
+echo "$FILES" | xargs ./node_modules/.bin/prettier --write
+exit 0

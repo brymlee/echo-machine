@@ -1,0 +1,93 @@
+ECHO(1)                       User Commands                      ECHO(1)
+
+NAME         top
+
+       echo - display a line of text
+
+SYNOPSIS         top
+
+       echo [SHORT-OPTION]... [STRING]...
+       echo LONG-OPTION
+
+DESCRIPTION         top
+
+       Echo the STRING(s) to standard output.
+
+       -n     do not output the trailing newline
+
+       -e     enable interpretation of backslash escapes
+
+       -E     disable interpretation of backslash escapes (default)
+
+       --help display this help and exit
+
+       --version
+              output version information and exit
+
+       If -e is in effect, the following sequences are recognized:
+
+       \\     backslash
+
+       \a     alert (BEL)
+
+       \b     backspace
+
+       \c     produce no further output
+
+       \e     escape
+
+       \f     form feed
+
+       \n     new line
+
+       \r     carriage return
+
+       \t     horizontal tab
+
+       \v     vertical tab
+
+       \0NNN  byte with octal value NNN (1 to 3 digits)
+
+       \xHH   byte with hexadecimal value HH (1 to 2 digits)
+
+       NOTE: your shell may have its own version of echo, which usually
+       supersedes the version described here.  Please refer to your
+       shell's documentation for details about the options it supports.
+
+AUTHOR         top
+
+       Written by Brian Fox and Chet Ramey.
+
+REPORTING BUGS         top
+
+       GNU coreutils online help:
+       <https://www.gnu.org/software/coreutils/>
+       Report any translation bugs to
+       <https://translationproject.org/team/>
+
+COPYRIGHT         top
+
+       Copyright © 2020 Free Software Foundation, Inc.  License GPLv3+:
+       GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+       This is free software: you are free to change and redistribute
+       it.  There is NO WARRANTY, to the extent permitted by law.
+
+SEE ALSO         top
+
+       Full documentation <https://www.gnu.org/software/coreutils/echo>
+       or available locally via: info '(coreutils) echo invocation'
+
+COLOPHON         top
+
+       This page is part of the coreutils (basic file, shell and text
+       manipulation utilities) project.  Information about the project
+       can be found at ⟨http://www.gnu.org/software/coreutils/⟩.  If you
+       have a bug report for this manual page, see
+       ⟨http://www.gnu.org/software/coreutils/⟩.  This page was obtained
+       from the tarball coreutils-8.32.tar.xz fetched from
+       ⟨http://ftp.gnu.org/gnu/coreutils/⟩ on 2021-04-01.  If you
+       discover any rendering problems in this HTML version of the page,
+       or you believe there is a better or more up-to-date source for
+       the page, or you have corrections or improvements to the
+       information in this COLOPHON (which is not part of the original
+       manual page), send a mail to man-pages@man7.org
