@@ -1,13 +1,15 @@
-import { Machine, assign } from "xstate";
+import { Machine } from "xstate";
 import _ from "lodash";
-import backspaceFilter from "./backspaceFilter";
-const { map, chain } = _;
+import _backspace_filter from "./backspace_filter";
+import _apply from "./apply";
+import _split from "./split";
+import _idle from "./idle";
+const { map, chain, some } = _;
 
 chain(
   map(
     [
       (() => {
-        const log: () => "man" | "normal" = () => "normal";
         const initialSequence: () =>
           | "none"
           | "\\b"
@@ -26,41 +28,31 @@ chain(
           | "-e"
           | "-E"
           | "--help"
-          | "--version" = () => "none";
-        const events: () =>
-          | { type: "MAN" }
-          | { type: "IDLE" }
-          | { type: "OUTPUT" }
-          | { type: "LOG" } = () => ({ type: "IDLE" });
-        const initialContext: () =>
-          | {
-              output: string;
-              outputs: string[];
-              type: ReturnType<typeof log>;
-              logs: (() => void)[];
-              flags: ReturnType<typeof initialFlag>[];
-              sequence: ReturnType<typeof initialSequence>;
-            }
-          | {
-              output: string;
-              outputs: string[];
-              type: ReturnType<typeof log>;
-              flags: ReturnType<typeof initialFlag>[];
-              sequence: ReturnType<typeof initialSequence>;
-            } = () => ({
-          output: "",
+          | "--version"
+          | "--man" = () => "none";
+        const events: () => { type: "APPLY" } = () => ({ type: "APPLY" });
+        const initialContext: () => {
+          input: string;
+          outputs: string[];
+          flags: ReturnType<typeof initialFlag>[];
+          sequence: ReturnType<typeof initialSequence>;
+        } = () => ({
+          input: "",
           outputs: [],
-          type: "normal",
           flags: [],
           sequence: "none",
         });
-        const isLogging = (
+        const isBackspaceSequenceExists = (
           context: ReturnType<typeof initialContext>,
-          event: ReturnType<typeof events>
-        ) => "logs" in context;
+          _event: ReturnType<typeof events>
+        ) => {
+          const { outputs } = context;
+          const backspaceSequence: ReturnType<typeof initialSequence> = "\\b";
+          return some(outputs, ({ includes }) => includes(backspaceSequence));
+        };
         const actions = () => ({
           guards: {
-            isLogging: isLogging,
+            isBackspaceSequenceExists,
           },
         });
         return {
@@ -68,8 +60,6 @@ chain(
           initialFlag,
           events,
           initialContext,
-          isLogging,
-          log,
           actions,
         };
       })(),
@@ -78,108 +68,44 @@ chain(
   )
 )
   .map((it) => {
-    const { isLogging, initialContext, events } = it;
-    const head = (() => {
-      const entry = assign(
-        (
-          context: ReturnType<typeof initialContext>,
-          event: ReturnType<typeof events>
-        ) => {
-          const { type } = context;
-          if ("logs" in context) {
-            if ("type" in context && context.type === "man") {
-              const output = "this is a man";
-              const outputs = [output];
-              const logs = outputs.map((it) => () => {
-                console.log(it);
-              });
-              return {
-                type,
-                output,
-                outputs,
-                logs,
-              };
-            } else {
-              const { output } = context;
-              const outputs = [output];
-              const logs = outputs.map((it) => () => {
-                console.log(it);
-              });
-              return {
-                type,
-                output,
-                outputs,
-                logs,
-              };
-            }
-          }
-          return context;
-        }
-      );
+    const { initialSequence, initialContext, events, initialFlag } = it;
+    const idle = _idle<
+      ReturnType<typeof initialSequence>,
+      ReturnType<typeof initialFlag>,
+      ReturnType<typeof initialContext>,
+      ReturnType<typeof events>
+    >();
+    const apply = _apply<
+      ReturnType<typeof initialSequence>,
+      ReturnType<typeof initialFlag>,
+      ReturnType<typeof initialContext>,
+      ReturnType<typeof events>
+    >();
+    const split = _split<
+      ReturnType<typeof initialSequence>,
+      ReturnType<typeof initialFlag>,
+      ReturnType<typeof initialContext>,
+      ReturnType<typeof events>
+    >();
+    const backspace_filter = _backspace_filter<
+      ReturnType<typeof initialSequence>,
+      ReturnType<typeof initialFlag>,
+      ReturnType<typeof initialContext>,
+      ReturnType<typeof events>
+    >();
+    const possibleStates: () => {
+      idle: {};
+      split: {};
+      apply: {};
+      backspace_filter: {};
+    } = () => {
       return {
-        idle: {
-          on: {
-            MAN: [
-              {
-                target: "log",
-                cond: isLogging,
-              },
-              {
-                target: "output",
-              },
-            ],
-            LOG: "log",
-            OUTPUT: "output",
-          },
-        },
-        log: {
-          entry,
-          on: {
-            IDLE: "idle",
-          },
-        },
+        idle,
+        apply,
+        split,
+        backspace_filter,
       };
-    })();
-    const tail = (() => {
-      const entry = assign(
-        (
-          context: ReturnType<typeof initialContext>,
-          event: ReturnType<typeof events>
-        ) => {
-          const { type } = context;
-          if ("type" in context && context.type === "man") {
-            const output = "this is a man";
-            const outputs = [output];
-            return {
-              type,
-              output,
-              outputs,
-            };
-          } else {
-            const { type, output } = context;
-            const outputs = [output];
-            return {
-              type,
-              output,
-              outputs,
-            };
-          }
-          return context;
-        }
-      );
-      return {
-        output: {
-          entry,
-          on: {
-            IDLE: "idle",
-          },
-        },
-      };
-    })();
-    const possibleStates: () => { idle: {}; log: {}; output: {} } = () => ({
-      ...head,
-      ...tail,
-    });
+    };
     const schema = () => {
       const states = possibleStates();
       return {
@@ -214,39 +140,17 @@ chain(
       machine,
     };
   })
-  .forEach(({ states, initialContext, initialSequence, initialFlag }) => {
-    const selectedSequence: ReturnType<typeof initialSequence> = "\\b";
-    const partial = backspaceFilter<
-      ReturnType<typeof initialContext>,
-      ReturnType<typeof initialSequence>,
-      ReturnType<typeof initialFlag>
-    >(selectedSequence);
-    const a: ReturnType<typeof initialContext> = {
-      type: "normal",
-      output: "hello\\bgoodbye\\b\\n",
-      outputs: ["hello\\bgoodbye\\b\\n"],
-      logs: [],
-      flags: ["-e"],
-      sequence: "\\b",
-    };
-    const sequenceOrigin: ReturnType<typeof initialSequence> = "none";
-    const selectedFlag: ReturnType<typeof initialFlag> = "-e";
-    console.log(a);
-    const b = partial(a.sequence)(sequenceOrigin)(a.flags)(selectedFlag)(
-      a.outputs
-    )((sequence) => (outputs) => ({
-      ...a,
-      sequence,
-      outputs,
-    }));
-    console.log(b);
-    const c = partial(a.sequence)(sequenceOrigin)(b.flags)(selectedFlag)(
-      b.outputs
-    )((sequence) => (outputs) => ({
-      ...b,
-      sequence,
-      outputs,
-    }));
-    console.log(c);
-  })
+  .forEach(
+    ({ machine, states, initialContext, initialSequence, initialFlag }) => {
+      const sequence: ReturnType<typeof initialSequence> = "\\b";
+      const newMachine = machine.withContext({
+        ...machine.initialState.context,
+        input: "abcd\\befgh\\bijkl",
+        sequence,
+      });
+      console.log(newMachine.initialState.context);
+      const b = newMachine.transition(newMachine.initialState, "APPLY");
+      console.log(b.context);
+    }
+  )
   .value();
